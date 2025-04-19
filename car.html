@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Gallery Carousel</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: #f4f4f4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        font-family: sans-serif;
+      }
+
+      .carousel-container {
+        width: 1025px;
+        overflow: hidden;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        cursor: grab;
+      }
+
+      .carousel-track {
+        display: flex;
+        transition: transform 0.3s ease-in-out;
+      }
+
+      .carousel-img {
+        min-width: 200px;
+        height: 150px;
+        object-fit: cover;
+        margin-right: 5px;
+        border-radius: 5px;
+        border: 3px solid transparent;
+        transition: border 0.3s;
+      }
+
+      .carousel-img.active {
+        border: 3px solid #2196f3;
+      }
+
+      .dots-container {
+        margin-top: 15px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: #bbb;
+        transition: background-color 0.3s;
+      }
+
+      .dot.active {
+        background-color: #2196f3;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="carousel-container">
+      <div class="carousel-track">
+        <img
+          src="https://themewagon.github.io/MediCio/assets/img/gallery/gallery-3.jpg"
+          class="carousel-img"
+        />
+        <img
+          src="https://themewagon.github.io/MediCio/assets/img/gallery/gallery-3.jpg"
+          class="carousel-img"
+        />
+        <img
+          src="https://themewagon.github.io/MediCio/assets/img/gallery/gallery-3.jpg"
+          class="carousel-img"
+        />
+        <img
+          src="https://themewagon.github.io/MediCio/assets/img/gallery/gallery-3.jpg"
+          class="carousel-img"
+        />
+        <img
+          src="https://themewagon.github.io/MediCio/assets/img/gallery/gallery-3.jpg"
+          class="carousel-img"
+        />
+        <img
+          src="https://themewagon.github.io/MediCio/assets/img/gallery/gallery-3.jpg"
+          class="carousel-img"
+        />
+        <img
+          src="https://themewagon.github.io/MediCio/assets/img/gallery/gallery-3.jpg"
+          class="carousel-img"
+        />
+        <img
+          src="https://themewagon.github.io/MediCio/assets/img/gallery/gallery-3.jpg"
+          class="carousel-img"
+        />
+        <img
+          src="https://themewagon.github.io/MediCio/assets/img/gallery/gallery-3.jpg"
+          class="carousel-img"
+        />
+      </div>
+    </div>
+
+    <script>
+      const track = document.querySelector(".carousel-track");
+      let images = document.querySelectorAll(".carousel-img");
+      const visibleCount = 5;
+      const imageWidth = 205;
+
+      // Clone elements for infinite scroll
+      for (let i = 0; i < visibleCount; i++) {
+        const firstClone = images[i].cloneNode(true);
+        const lastClone = images[images.length - 1 - i].cloneNode(true);
+        track.appendChild(firstClone);
+        track.insertBefore(lastClone, track.firstChild);
+      }
+
+      images = document.querySelectorAll(".carousel-img"); // refresh
+      let index = visibleCount;
+      track.style.transform = `translateX(-${index * imageWidth}px)`;
+
+      // Create dots
+      const dotsContainer = document.createElement("div");
+      dotsContainer.className = "dots-container";
+      document.body.appendChild(dotsContainer);
+
+      for (let i = 0; i < images.length - visibleCount * 2; i++) {
+        const dot = document.createElement("div");
+        dot.classList.add("dot");
+        if (i === 0) dot.classList.add("active");
+        dotsContainer.appendChild(dot);
+      }
+      const dots = document.querySelectorAll(".dot");
+
+      function updateCarousel(animate = true) {
+        const moveX = index * imageWidth;
+        if (animate) track.style.transition = "transform 0.3s ease-in-out";
+        else track.style.transition = "none";
+
+        track.style.transform = `translateX(-${moveX}px)`;
+
+        // Border update
+        images.forEach((img) => img.classList.remove("active"));
+        const centerIndex = index;
+        if (images[centerIndex]) images[centerIndex].classList.add("active");
+
+        // Dots update
+        const logicalIndex = (index - visibleCount + dots.length) % dots.length;
+        dots.forEach((dot) => dot.classList.remove("active"));
+        if (dots[logicalIndex]) dots[logicalIndex].classList.add("active");
+      }
+
+      function nextSlide() {
+        index++;
+        updateCarousel();
+
+        if (index >= images.length - visibleCount) {
+          setTimeout(() => {
+            index = visibleCount;
+            updateCarousel(false);
+          }, 300);
+        }
+      }
+
+      setInterval(nextSlide, 3000);
+
+      // Drag
+      let startX = 0;
+      let isDragging = false;
+
+      track.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        startX = e.pageX;
+      });
+
+      track.addEventListener("mouseup", (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        const deltaX = e.pageX - startX;
+
+        if (deltaX > 50) index--;
+        else if (deltaX < -50) index++;
+
+        updateCarousel();
+
+        if (index <= 0) {
+          setTimeout(() => {
+            index = images.length - visibleCount * 2;
+            updateCarousel(false);
+          }, 300);
+        }
+        if (index >= images.length - visibleCount) {
+          setTimeout(() => {
+            index = visibleCount;
+            updateCarousel(false);
+          }, 300);
+        }
+      });
+
+      track.addEventListener("mouseleave", () => {
+        isDragging = false;
+      });
+
+      function updateCarousel(animate = true) {
+        const moveX = index * imageWidth;
+        if (animate) track.style.transition = "transform 0.3s ease-in-out";
+        else track.style.transition = "none";
+
+        track.style.transform = `translateX(-${moveX}px)`;
+
+        // Border update
+        images.forEach((img) => img.classList.remove("active"));
+        const centerOffset = Math.floor(visibleCount / 2);
+        const centerIndex = index + centerOffset;
+        if (images[centerIndex]) images[centerIndex].classList.add("active");
+
+        // Dots update
+        const logicalIndex = (index - visibleCount + dots.length) % dots.length;
+        dots.forEach((dot) => dot.classList.remove("active"));
+        if (dots[logicalIndex]) dots[logicalIndex].classList.add("active");
+      }
+    </script>
+  </body>
+</html>
